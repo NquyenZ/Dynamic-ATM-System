@@ -5,9 +5,7 @@
 	
 	Contact: https://facebook.com/nquyenZ.26
 
-	Last Updated: 10:30PM 17/11/2024
-
-	>> Next Update: English translation
+	Last Updated: 8:52PM 19/11/2024
 */
 
 #include <YSI\y_hooks>
@@ -103,11 +101,11 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 
                 PlayerInfo[playerid][pRobAtm] = 120;
 
-                Inventory_Add(playerid, "Tien Ban", receive);
+                Inventory_Add(playerid, "Dirty Money", receive);
 
                 // >> Inventory_Add is my Inventory system function, so you can config that fit with your Inventory system << //
 
-                SCMf(playerid, COLOR_WHITE, "Ban da cuop thanh cong {ATM{FFFFFF} va nhan duoc $%s", number_format(receive));
+                SCMf(playerid, COLOR_WHITE, "You successfully robbed an {19AE61}ATM{FFFFFF} and got $%s Dirty Money", number_format(receive));
 
                 ATM_Update(i);
             }
@@ -155,7 +153,7 @@ public OnLoadAtms()
 	}
 
 	if(i > 0)
-		printf("[ATM System] Load thanh cong %d ATM", i);
+		printf("[ATM System] %d ATM loaded", i);
 }
 
 public OnCreateAtmFinish(playerid, index, type)
@@ -227,7 +225,7 @@ public OnPlayerShootDynamicObject(playerid, weaponid, objectid, Float:x, Float:y
 
 stock LoadATM()
 {
-	printf("[ATM System] Tien hanh load du lieu cac ATM tu Database...");
+	printf("[ATM System] Loading ATM data from Database...");
 
 	mysql_function_query(MainPipeline, "SELECT * FROM atms", true, "OnLoadAtms", "");
 }
@@ -286,7 +284,7 @@ stock ATM_Update(index)
 
 	ATM_Reload(index);
 
-	printf("[ATM System] ATM #%d cap nhat du lieu thanh cong", index);
+	printf("[ATM System] ATM #%d data updated successfully", index);
 	return 1;
 }
 
@@ -299,10 +297,10 @@ stock ATM_Reload(index)
 		DestroyDynamicPickup(AtmInfo[index][PickupID]);
 
 	if(AtmInfo[index][ObjectHealth] > 0.0 && AtmInfo[index][RobTime] == 0)
-		format(string, sizeof(string), "{99D6FF}ATM #%d\n{FFFFFF}So Tien Hien Co: {33AA33}$%s{FFFFFF}\n\n\
-		Nhan '{FFFF66}Y{FFFFFF}' de su dung ATM", index, number_format(AtmInfo[index][Money]));
+		format(string, sizeof(string), "{99D6FF}ATM #%d\n{FFFFFF}Money Availalbe: {33AA33}$%s{FFFFFF}\n\n\
+		Press '{FFFF66}Y{FFFFFF}' to use ATM", index, number_format(AtmInfo[index][Money]));
 	else if(AtmInfo[index][ObjectHealth] <= 0.0 && AtmInfo[index][RobTime] > 0)
-		format(string, sizeof(string), "{AA3333}ATM Nay Dang Bi Hu Hong");
+		format(string, sizeof(string), "{AA3333}ATM Broken");
 
 	if(IsValidDynamic3DTextLabel(AtmInfo[index][TextID]))
 		UpdateDynamic3DTextLabelText(AtmInfo[index][TextID], COLOR_WHITE, string);
@@ -341,7 +339,7 @@ stock ATM_AddDefault(playerid)
 	GetPlayerPos(playerid, Pos[0], Pos[1], Pos[2]);
 
 	if(atmid == -1)
-		return SCM(playerid, COLOR_GREY, "Hien khong con Slot ATM trong de co the tao");
+		return SCM(playerid, COLOR_GREY, "There is no free ATM slot to create");
 
 	AtmInfo[atmid][ID] = atmid;
 	AtmInfo[atmid][VirtualWorld] = 0;
@@ -390,7 +388,7 @@ stock ATM_Add(index)
 
 	mysql_function_query(MainPipeline, string, false, "OnCreateAtmFinish", "iii", -1, index, SENDDATA_ATM);
 
-	printf("[ATM System] ATM #%d da duoc tao thanh cong", index);
+	printf("[ATM System] ATM #%d created successfully", index);
 	return 1;
 }
 
@@ -449,7 +447,7 @@ stock ATM_Remove(index)
 	AtmInfo[index][Money] = 0;
 	AtmInfo[index][RobTime] = 0;
 
-	printf("[ATM System] Xoa thanh cong ATM #%d", index);
+	printf("[ATM System] Deleted successfully ATM #%d", index);
 	return 1;
 }
 
@@ -486,16 +484,16 @@ hook OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 	if(PRESSED(KEY_YES) && i != -1)
 	{
 		if(AtmInfo[i][ObjectHealth] <= 0.0 && AtmInfo[i][RobTime] > 0)
-			return SCM(playerid, COLOR_LIGHTRED, "* ATM nay hien dang bi hong");
+			return SCM(playerid, COLOR_LIGHTRED, "* This ATM has been broken, you can't use it now");
 
 		if(PlayerInfo[playerid][pSoTaiKhoan] == 0)
-			return SCM(playerid, COLOR_GREY, "Ban khong co tai khoan ngan hang de co the su dung ATM");
+			return SCM(playerid, COLOR_GREY, "You don't have a bank account to use ATM");
 
-		format(string, sizeof(string), "{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\n\
-			{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap mat khau ngan hang vao o ben duoi:",
+		format(string, sizeof(string), "{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\n\
+			{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the password to log in:",
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
-		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Huy Bo");
+		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Cancel");
 	}
 	return 1;
 }
@@ -525,7 +523,7 @@ hook OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y, F
                     SetDynamicObjectPos(AtmInfo[i][ObjectID], AtmInfo[i][Pos_X], AtmInfo[i][Pos_Y], AtmInfo[i][Pos_Z]);
                     SetDynamicObjectRot(AtmInfo[i][ObjectID], AtmInfo[i][Rot_X], AtmInfo[i][Rot_Y], AtmInfo[i][Rot_Y]);
 
-                    SCMf(playerid, COLOR_LIGHTBLUE, "* Ban da chinh sua Object cua ATM #%d thanh cong", i);
+                    SCMf(playerid, COLOR_LIGHTBLUE, "* You have successfully edited ATM #%d object position", i);
 
                     DeletePVar(playerid, #EditATM);
 
@@ -554,28 +552,28 @@ Dialog:DIALOG_ATM_LOGIN(playerid, response, listitem, inputtext[])
 
 	if(!VerifyPlayerBankAccountPassword(playerid, inputtext))
 	{
-		format(string, sizeof(string), "{AA3333}Mat khau khong chinh xac\n\n\
-			{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\n\
-			{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap mat khau ngan hang vao o ben duoi:",
+		format(string, sizeof(string), "{AA3333}Password is incorrect, please try again\n\n\
+			{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\n\
+			{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the password to log in:",
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
-		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Huy Bo");
+		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Cancel");
 		return 1;
 	}
 
-	format(string, sizeof(string), "Ban da dang nhap vao tai khoan ngan hang %s (%d) thanh cong",
+	format(string, sizeof(string), "You have successfully loged into bank account %s (%d)",
 		PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
 	notification.Show(playerid, "ATM", string, "hud:radar_light");
 
-	format(string, sizeof(string), "{FFFFFF}Tai Khoan:\t{19AE61}%s {525252}(%d)\n\
-		{FFFFFF}So Du:\t{33AA33}$%s\n\
+	format(string, sizeof(string), "{FFFFFF}Account:\t{19AE61}%s {525252}(%d)\n\
+		{FFFFFF}Current:\t{33AA33}$%s\n\
 		{FFFFFF}-----------------------\n\
-		{FF8000}>{FFFFFF} Gui Tien\n\
-		{FF8000}>{FFFFFF} Rut Tien",
+		{FF8000}>{FFFFFF} Deposit\n\
+		{FF8000}>{FFFFFF} Withdraw",
 		PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan], number_format(PlayerInfo[playerid][pAccount]));
 
-	Dialog_Show(playerid, DIALOG_ATM_MAIN, DIALOG_STYLE_TABLIST, "ATM > MAIN MENU", string, "Chon", "Huy Bo");
+	Dialog_Show(playerid, DIALOG_ATM_MAIN, DIALOG_STYLE_TABLIST, "ATM > MAIN MENU", string, "Choose", "Cancel");
 	return 1;
 }
 
@@ -591,25 +589,25 @@ Dialog:DIALOG_ATM_MAIN(playerid, response, listitem, inputtext[])
 	{
 		case 3:
 		{
-			format(string, sizeof(string), "{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\
-				{FFFFFF}So Du: {33AA33}$%s\n\
-				{FFFFFF}So Tien Hien Co: {33AA33}$%s\n\n\
-				{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap so tien can gui vao o ben duoi:",
+			format(string, sizeof(string), "{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
+				{FFFFFF}Current: {33AA33}$%s\n\
+				{FFFFFF}Money: {33AA33}$%s\n\n\
+				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to deposit:",
 				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
 				number_format(PlayerInfo[playerid][pAccount]),
 				number_format(PlayerInfo[playerid][pCash]));
 
-			Dialog_Show(playerid, DIALOG_ATM_DEPOSIT, DIALOG_STYLE_INPUT, "ATM > DEPOSIT", string, ">", "Huy Bo");
+			Dialog_Show(playerid, DIALOG_ATM_DEPOSIT, DIALOG_STYLE_INPUT, "ATM > DEPOSIT", string, ">", "Cancel");
 		}
 		case 4:
 		{
-			format(string, sizeof(string), "{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\
-				{FFFFFF}So Du: {33AA33}$%s\n\n\
-				{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap so tien can rut vao o ben duoi:",
+			format(string, sizeof(string), "{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
+				{FFFFFF}Current: {33AA33}$%s\n\n\
+				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to withdraw:",
 				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
 				number_format(PlayerInfo[playerid][pAccount]));
 
-			Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Huy Bo");
+			Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Cancel");
 		}
 	}
 	return 1;
@@ -627,24 +625,24 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 
 	if(!IsNumeric(inputtext) || strval(inputtext) < 1)
 	{
-		format(string, sizeof(string), "{AA3333}So tien can gui khong hop le\n\n\
-			{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\
-				{FFFFFF}So Du: {33AA33}$%s\n\
-				{FFFFFF}So Tien Hien Co: {33AA33}$%s\n\n\
-				{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap so tien can gui vao o ben duoi:",
+		format(string, sizeof(string), "{AA3333}The amount of money you entered was invalid, please try again\n\n\
+			{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
+				{FFFFFF}Current: {33AA33}$%s\n\
+				{FFFFFF}Money: {33AA33}$%s\n\n\
+				{FFFFFF}[{FF0000}!{FFFFFF}] Pleae enter the amount of money you want to deposit:",
 				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
 				number_format(PlayerInfo[playerid][pAccount]),
 				number_format(PlayerInfo[playerid][pCash]));
 
-		Dialog_Show(playerid, DIALOG_ATM_DEPOSIT, DIALOG_STYLE_INPUT, "ATM > DEPOSIT", string, ">", "Huy Bo");
+		Dialog_Show(playerid, DIALOG_ATM_DEPOSIT, DIALOG_STYLE_INPUT, "ATM > DEPOSIT", string, ">", "Cancel");
 		return 1;
 	}
 
 	if(PlayerInfo[playerid][pCash] < strval(inputtext))
-		return SCM(playerid, COLOR_GREY, "Ban khong du so tien vua nhap de co the gui tien");
+		return SCM(playerid, COLOR_GREY, "You don't have enough money that you have entered to deposit");
 
 	if(gettime() - GetPVarInt(playerid, "LastTransaction") < 10)
-		return SCM(playerid, COLOR_GREY, "Vui long cho 10 giay truoc khi thuc hien mot giao dich khac");
+		return SCM(playerid, COLOR_GREY, "Please wait 10 seconds before making a new transaction");
 
 	SetPVarInt(playerid, "LastTransaction", gettime());
 
@@ -657,13 +655,13 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 		ATM_Update(i);
 
 		SCM(playerid, COLOR_GREY, "|___ BANK STATEMENT ___|");
-		SCMf(playerid, COLOR_GREY, " So Du Cu: {33AA33}$%s", number_format(current));
-		SCMf(playerid, COLOR_GREY, " So Tien Gui: {33AA33}$%s", number_format(strval(inputtext)));
-		SCMf(playerid, COLOR_GREY, " Phi Giao Dich: {33AA33}$%s", number_format(strval(inputtext) * 20 / 100));
+		SCMf(playerid, COLOR_GREY, " Old Balance: {33AA33}$%s", number_format(current));
+		SCMf(playerid, COLOR_GREY, " Deposit: {33AA33}$%s", number_format(strval(inputtext)));
+		SCMf(playerid, COLOR_GREY, " Transaction Fee: {33AA33}$%s", number_format(strval(inputtext) * 20 / 100));
 		SCM(playerid, COLOR_GREY, "|-----------------------------------------|");
-		SCMf(playerid, COLOR_GREY, " So Du Moi: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
+		SCMf(playerid, COLOR_GREY, " New Balance: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
 
-		format(string, sizeof(string), "%s (IP: %s) da gui $%s (Phi Giao Dich: $%s) vao tai khoan %s (%d)",
+		format(string, sizeof(string), "%s (IP: %s) has deposited $%s (Transaction Fee: $%s) into account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)), number_format(strval(inputtext) * 20 / 100),
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
@@ -680,13 +678,13 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 		ATM_Update(i);
 
 		SCM(playerid, COLOR_GREY, "|___ BANK STATEMENT ___|");
-		SCMf(playerid, COLOR_GREY, " So Du Cu: {33AA33}$%s", number_format(current));
-		SCMf(playerid, COLOR_GREY, " So Tien Gui: {33AA33}$%s", number_format(strval(inputtext)));
-		SCMf(playerid, COLOR_GREY, " Phi Giao Dich: {33AA33}$0");
+		SCMf(playerid, COLOR_GREY, " Old Balance: {33AA33}$%s", number_format(current));
+		SCMf(playerid, COLOR_GREY, " Deposit: {33AA33}$%s", number_format(strval(inputtext)));
+		SCMf(playerid, COLOR_GREY, " Transaction Fee: {33AA33}$0");
 		SCM(playerid, COLOR_GREY, "|-----------------------------------------|");
-		SCMf(playerid, COLOR_GREY, " So Du Moi: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
+		SCMf(playerid, COLOR_GREY, " New Balance: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
 
-		format(string, sizeof(string), "%s (IP: %s) da gui $%s (Phi Giao Dich: $0) vao tai khoan %s (%d)",
+		format(string, sizeof(string), "%s (IP: %s) has deposited $%s (Transaction Fee: $0) into account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)),
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
@@ -709,25 +707,25 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 
 	if(!IsNumeric(inputtext) || strval(inputtext) < 1)
 	{
-		format(string, sizeof(string), "{AA3333}So tien can rut khong hop le\n\n\
-			{FFFFFF}Tai Khoan: {19AE61}%s {525252}(%d)\n\
-				{FFFFFF}So Du: {33AA33}$%s\n\n\
-				{FFFFFF}[{FF0000}!{FFFFFF}] Vui long nhap so tien can rut vao o ben duoi:",
+		format(string, sizeof(string), "{AA3333}The amount of money you entered was invalid, please try again\n\n\
+			{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
+				{FFFFFF}Current: {33AA33}$%s\n\n\
+				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to withdraw:",
 				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
 				number_format(PlayerInfo[playerid][pAccount]));
 
-		Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Huy Bo");
+		Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Cancel");
 		return 1;
 	}
 
 	if(PlayerInfo[playerid][pAccount] < strval(inputtext))
-		return SCM(playerid, COLOR_GREY, "Tai khoan cua ban khong du so tien vua nhap de co the rut");
+		return SCM(playerid, COLOR_GREY, "You don't have enough money that you have entered to withdraw");
 
 	if(gettime() - GetPVarInt(playerid, "LastTransaction") < 10)
-		return SCM(playerid, COLOR_GREY, "Vui long cho 10 giay truoc khi thuc hien mot giao dich khac");
+		return SCM(playerid, COLOR_GREY, "Please wait 10 seconds before making a new transaction");
 
 	if(AtmInfo[i][Money] < strval(inputtext))
-		return SCM(playerid, COLOR_GREY, "ATM nay khong du so tien ban vua nhap de co the rut");
+		return SCM(playerid, COLOR_GREY, "This ATM doesn't have enough money that you have entered to withdraw");
 
 	SetPVarInt(playerid, "LastTransaction", gettime());
 
@@ -740,13 +738,13 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 		ATM_Update(i);
 
 		SCM(playerid, COLOR_GREY, "|___ BANK STATEMENT ___|");
-		SCMf(playerid, COLOR_GREY, " So Du Cu: {33AA33}$%s", number_format(current));
-		SCMf(playerid, COLOR_GREY, " So Tien Rut: {33AA33}$%s", number_format(strval(inputtext)));
-		SCMf(playerid, COLOR_GREY, " Phi Giao Dich: {33AA33}$%s", number_format(strval(inputtext) * 20 / 100));
+		SCMf(playerid, COLOR_GREY, " Old Balance: {33AA33}$%s", number_format(current));
+		SCMf(playerid, COLOR_GREY, " Withdraw: {33AA33}$%s", number_format(strval(inputtext)));
+		SCMf(playerid, COLOR_GREY, " Transaction Fee: {33AA33}$%s", number_format(strval(inputtext) * 20 / 100));
 		SCM(playerid, COLOR_GREY, "|-----------------------------------------|");
-		SCMf(playerid, COLOR_GREY, " So Du Moi: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
+		SCMf(playerid, COLOR_GREY, " New Balance: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
 
-		format(string, sizeof(string), "%s (IP: %s) da rut $%s (Phi Giao Dich: $%s) tu tai khoan %s (%d)",
+		format(string, sizeof(string), "%s (IP: %s) has withdrew $%s (Transaction Fee: $%s) from account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)), number_format(strval(inputtext) * 20 / 100),
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
@@ -763,13 +761,13 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 		ATM_Update(i);
 
 		SCM(playerid, COLOR_GREY, "|___ BANK STATEMENT ___|");
-		SCMf(playerid, COLOR_GREY, " So Du Cu: {33AA33}$%s", number_format(current));
-		SCMf(playerid, COLOR_GREY, " So Tien Rut: {33AA33}$%s", number_format(strval(inputtext)));
-		SCMf(playerid, COLOR_GREY, " Phi Giao Dich: {33AA33}$0");
+		SCMf(playerid, COLOR_GREY, " Old Balance: {33AA33}$%s", number_format(current));
+		SCMf(playerid, COLOR_GREY, " Withdraw: {33AA33}$%s", number_format(strval(inputtext)));
+		SCMf(playerid, COLOR_GREY, " Transaction Fee: {33AA33}$0");
 		SCM(playerid, COLOR_GREY, "|-----------------------------------------|");
-		SCMf(playerid, COLOR_GREY, " So Du Moi: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
+		SCMf(playerid, COLOR_GREY, " New Balance: {33AA33}$%s", number_format(PlayerInfo[playerid][pAccount]));
 
-		format(string, sizeof(string), "%s (IP: %s) da rut $%s (Phi Giao Dich: $0) tu tai khoan %s (%d)",
+		format(string, sizeof(string), "%s (IP: %s) has withdrew $%s (Transaction Fee: $0) from account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)),
 			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
 
@@ -804,29 +802,29 @@ CMD:aatm(playerid, params[])
 	{
 		atmid = ATM_AddDefault(playerid);
 
-		SCMf(playerid, COLOR_LIGHTBLUE, "* Ban da tao thanh cong ATM #%d", atmid);
+		SCMf(playerid, COLOR_LIGHTBLUE, "* You have successfully created ATM #%d", atmid);
 
 		ATM_Add(atmid);
 	}
 	else if(strcmp(choice, "delete", true) == 0)
 	{
 		if(AtmInfo[atmid][Exists] == false)
-			return SCM(playerid, COLOR_GREY, "ID ATM khong hop le");
+			return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
 
 		ATM_Clear(atmid);
 		ATM_Update(atmid);
 
-		SCMf(playerid, COLOR_LIGHTBLUE, "* Ban da xoa thanh cong ATM #%d", atmid);
+		SCMf(playerid, COLOR_LIGHTBLUE, "* You have successfully deleted ATM #%d", atmid);
 	}
 	else if(strcmp(choice, "goto", true) == 0)
 	{
 		if(AtmInfo[atmid][Exists] == false)
-			return SCM(playerid, COLOR_GREY, "ID ATM khong hop le");
+			return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
 
 		if(AtmInfo[atmid][Pos_X] == 0.0)
 			return 1;
 
-		format(string, sizeof(string), "~w~Ban da dich chuyen den ~y~ATM #%d~w~ thanh cong", atmid);
+		format(string, sizeof(string), "~w~You have successfully teleported to ~y~ATM #%d", atmid);
 
 		SetPlayerInterior(playerid, 0);
 		SetPlayerVirtualWorld(playerid, 0);
@@ -839,7 +837,7 @@ CMD:aatm(playerid, params[])
 	else if(strcmp(choice, "object", true) == 0)
 	{
 		if(AtmInfo[atmid][Exists] == false)
-			return SCM(playerid, COLOR_GREY, "ID ATM khong hop le");
+			return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
 
 		if(AtmInfo[atmid][ObjectID] == INVALID_OBJECT_ID)
 			return 1;
@@ -848,7 +846,7 @@ CMD:aatm(playerid, params[])
 
 		SetPVarInt(playerid, #EditATM, atmid + 1);
 
-		SCMf(playerid, COLOR_LIGHTRED, "* Ban hien dang chinh sua Object cua ATM #%d", atmid);
+		SCMf(playerid, COLOR_LIGHTRED, "* You are now editing the object position of ATM #%d", atmid);
 	}
 	return 1;
 }
@@ -869,10 +867,10 @@ CMD:setatmobjecthp(playerid, params[])
 		return SDM(playerid, "/setatmobjecthp [Atm ID] [Object HP]");
 
 	if(AtmInfo[atmid][Exists] == false)
-		return SCM(playerid, COLOR_GREY, "ID ATM khong hop le");
+		return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
 
 	if(hp > 300 || hp < 0)
-		return SCM(playerid, COLOR_GREY, "HP khong hop le");
+		return SCM(playerid, COLOR_GREY, "Object HP is invalid, please try again");
 
 	AtmInfo[atmid][ObjectHealth] = hp;
 
@@ -896,10 +894,10 @@ CMD:setatmrobtime(playerid, params[])
 		return SDM(playerid, "/setatmrobtime [Atm ID] [Time]");
 
 	if(AtmInfo[atmid][Exists] == false)
-		return SCM(playerid, COLOR_GREY, "ID ATM khong hop le");
+		return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
 
 	if(time > 120 || time < 0)
-		return SCM(playerid, COLOR_GREY, "Thoi gian khong hop le");
+		return SCM(playerid, COLOR_GREY, "Time is invalid, please try again");
 
 	AtmInfo[atmid][RobTime] = time;
 
@@ -907,46 +905,16 @@ CMD:setatmrobtime(playerid, params[])
 	return 1;
 }
 
-CMD:bankpw(playerid, params[])
-{
-	new
-		pw[32];
-
-	if(sscanf(params, "s[24]", pw))
-		return SDM(playerid, "/bankpw [Password]");
-
-	if(strlen(pw) < 4 || strlen(pw) > 16)
-		return SCM(playerid, COLOR_GREY, "Mat khau phai co it nhat 4 ki tu va thap hon 16 ki tu");
-
-	SetBankPassword(playerid, pw);
-	return 1;
-}
-
-CMD:bankaccname(playerid, params[])
-{
-	new
-		name[65];
-
-	if(sscanf(params, "s[24]", name))
-		return SDM(playerid, "/bankaccname [Name]");
-
-	if(strlen(name) < 2 || strlen(name) > 16)
-		return SCM(playerid, COLOR_GREY, "Ten tai khoan phai co it nhat 2 ki tu va thap hon 16 ki tu");
-
-	PlayerInfo[playerid][pTenTaiKhoanNganHang] = name;
-	return 1;
-}
-
 // >> MACROS << //
 
 #define SendNotAdmin(%0) \
-    SendClientMessage(%0, COLOR_GREY, "Ban khong duoc phep su dung lenh nay")
+    SendClientMessage(%0, COLOR_GREY, "You don't have permission to use that command")
 
 #define SendNotDutyAdmin(%0) \
-    SendClientMessage(%0, COLOR_GREY, "Ban chua Onduty Admin de co the su dung lenh nay")
+    SendClientMessage(%0, COLOR_GREY, "You are not on Admin Duty to use this command")
 
 #define SDM(%0,%1) \
-    SendClientMessage(%0, COLOR_GREY, "SU DUNG: "%1)
+    SendClientMessage(%0, COLOR_GREY, "USEAGE: "%1)
 
 #define SCMf(%0,%1,%2) \
 	SendClientMessageFormated(%0, %1, %2)
