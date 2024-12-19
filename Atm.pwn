@@ -22,12 +22,12 @@ enum pInfo
 {
 	pCash,
 	pAccount,
-	pSoTaiKhoan,
-	pTenTaiKhoanNganHang[65],
+	pBankNumber,
+	pBankName[65],
 	pAdmin,
 	pInt,
 	pVW,
-	pMatKhauNganHang[65],
+	pBankPassword[65],
 	pRobAtm
 };
 
@@ -153,7 +153,7 @@ public OnLoadAtms()
 	}
 
 	if(i > 0)
-		printf("[ATM System] %d ATM loaded", i);
+		printf("[ATM System] %d ATM(s) loaded", i);
 }
 
 public OnCreateAtmFinish(playerid, index, type)
@@ -459,7 +459,7 @@ stock SetBankPassword(playerid, password[])
     SHA256_PassHash(password, BANK_HASH, hashed_password, MAX_HASH_LENGTH);
     SCMf(playerid, COLOR_GREY, "%s", password);
 
-    format(PlayerInfo[playerid][pMatKhauNganHang], MAX_HASH_LENGTH, "%s", hashed_password);
+    format(PlayerInfo[playerid][pBankPassword], MAX_HASH_LENGTH, "%s", hashed_password);
     return 1;
 }
 
@@ -470,7 +470,7 @@ stock VerifyPlayerBankAccountPassword(playerid, password[])
 
     SHA256_PassHash(password, BANK_HASH, hashed_password, MAX_HASH_LENGTH);
 
-    if(CompareStrings(hashed_password, PlayerInfo[playerid][pMatKhauNganHang]))
+    if(CompareStrings(hashed_password, PlayerInfo[playerid][pBankPassword]))
         return 1;
     return 0;
 }
@@ -486,12 +486,12 @@ hook OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 		if(AtmInfo[i][ObjectHealth] <= 0.0 && AtmInfo[i][RobTime] > 0)
 			return SCM(playerid, COLOR_LIGHTRED, "* This ATM has been broken, you can't use it now");
 
-		if(PlayerInfo[playerid][pSoTaiKhoan] == 0)
+		if(PlayerInfo[playerid][pBankNumber] == 0)
 			return SCM(playerid, COLOR_GREY, "You don't have a bank account to use ATM");
 
 		format(string, sizeof(string), "{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\n\
 			{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the password to log in:",
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Cancel");
 	}
@@ -555,14 +555,14 @@ Dialog:DIALOG_ATM_LOGIN(playerid, response, listitem, inputtext[])
 		format(string, sizeof(string), "{AA3333}Password is incorrect, please try again\n\n\
 			{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\n\
 			{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the password to log in:",
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Dialog_Show(playerid, DIALOG_ATM_LOGIN, DIALOG_STYLE_PASSWORD, "ATM > LOGIN MENU", string, ">", "Cancel");
 		return 1;
 	}
 
 	format(string, sizeof(string), "You have successfully loged into bank account %s (%d)",
-		PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+		PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 	notification.Show(playerid, "ATM", string, "hud:radar_light");
 
@@ -571,7 +571,7 @@ Dialog:DIALOG_ATM_LOGIN(playerid, response, listitem, inputtext[])
 		{FFFFFF}-----------------------\n\
 		{FF8000}>{FFFFFF} Deposit\n\
 		{FF8000}>{FFFFFF} Withdraw",
-		PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan], number_format(PlayerInfo[playerid][pAccount]));
+		PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber], number_format(PlayerInfo[playerid][pAccount]));
 
 	Dialog_Show(playerid, DIALOG_ATM_MAIN, DIALOG_STYLE_TABLIST, "ATM > MAIN MENU", string, "Choose", "Cancel");
 	return 1;
@@ -593,7 +593,7 @@ Dialog:DIALOG_ATM_MAIN(playerid, response, listitem, inputtext[])
 				{FFFFFF}Current: {33AA33}$%s\n\
 				{FFFFFF}Money: {33AA33}$%s\n\n\
 				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to deposit:",
-				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
+				PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber],
 				number_format(PlayerInfo[playerid][pAccount]),
 				number_format(PlayerInfo[playerid][pCash]));
 
@@ -604,7 +604,7 @@ Dialog:DIALOG_ATM_MAIN(playerid, response, listitem, inputtext[])
 			format(string, sizeof(string), "{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
 				{FFFFFF}Current: {33AA33}$%s\n\n\
 				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to withdraw:",
-				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
+				PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber],
 				number_format(PlayerInfo[playerid][pAccount]));
 
 			Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Cancel");
@@ -630,7 +630,7 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 				{FFFFFF}Current: {33AA33}$%s\n\
 				{FFFFFF}Money: {33AA33}$%s\n\n\
 				{FFFFFF}[{FF0000}!{FFFFFF}] Pleae enter the amount of money you want to deposit:",
-				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
+				PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber],
 				number_format(PlayerInfo[playerid][pAccount]),
 				number_format(PlayerInfo[playerid][pCash]));
 
@@ -663,7 +663,7 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 
 		format(string, sizeof(string), "%s (IP: %s) has deposited $%s (Transaction Fee: $%s) into account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)), number_format(strval(inputtext) * 20 / 100),
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Log("Logs/Player/AtmDeposit.log", string);
 		
@@ -686,7 +686,7 @@ Dialog:DIALOG_ATM_DEPOSIT(playerid, response, listitem, inputtext[])
 
 		format(string, sizeof(string), "%s (IP: %s) has deposited $%s (Transaction Fee: $0) into account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)),
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Log("Logs/Player/AtmDeposit.log", string);
 		
@@ -711,7 +711,7 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 			{FFFFFF}Account: {19AE61}%s {525252}(%d)\n\
 				{FFFFFF}Current: {33AA33}$%s\n\n\
 				{FFFFFF}[{FF0000}!{FFFFFF}] Please enter the amount of money you want to withdraw:",
-				PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan],
+				PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber],
 				number_format(PlayerInfo[playerid][pAccount]));
 
 		Dialog_Show(playerid, DIALOG_ATM_WITHDRAW, DIALOG_STYLE_INPUT, "ATM > WITHDRAW", string, ">", "Cancel");
@@ -746,7 +746,7 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 
 		format(string, sizeof(string), "%s (IP: %s) has withdrew $%s (Transaction Fee: $%s) from account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)), number_format(strval(inputtext) * 20 / 100),
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Log("Logs/Player/AtmWithdraw.log", string);
 		
@@ -769,7 +769,7 @@ Dialog:DIALOG_ATM_WITHDRAW(playerid, response, listitem, inputtext[])
 
 		format(string, sizeof(string), "%s (IP: %s) has withdrew $%s (Transaction Fee: $0) from account %s (%d)",
 			GetPlayerNameEx(playerid), GetPlayerIpEx(playerid), number_format(strval(inputtext)),
-			PlayerInfo[playerid][pTenTaiKhoanNganHang], PlayerInfo[playerid][pSoTaiKhoan]);
+			PlayerInfo[playerid][pBankName], PlayerInfo[playerid][pBankNumber]);
 
 		Log("Logs/Player/AtmWithdraw.log", string);
 		
@@ -793,7 +793,7 @@ CMD:aatm(playerid, params[])
 
 	if(sscanf(params, "s[32]D(-1)", choice, atmid))
 	{
-		SDM(playerid, "/aatm [Option] [Atm ID]");
+		SendUseageMessage(playerid, "/aatm [Option] [Atm ID]");
 		SCM(playerid, COLOR_GREY, "OPTION: create / delete / goto / object");
 		return 1;
 	}
@@ -864,7 +864,7 @@ CMD:setatmobjecthp(playerid, params[])
 		return SendNotDutyAdmin(playerid);
 
 	if(sscanf(params, "dd", atmid, hp))
-		return SDM(playerid, "/setatmobjecthp [Atm ID] [Object HP]");
+		return SendUseageMessage(playerid, "/setatmobjecthp [Atm ID] [Object HP]");
 
 	if(AtmInfo[atmid][Exists] == false)
 		return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
@@ -891,7 +891,7 @@ CMD:setatmrobtime(playerid, params[])
 		return SendNotDutyAdmin(playerid);
 
 	if(sscanf(params, "dd", atmid, time))
-		return SDM(playerid, "/setatmrobtime [Atm ID] [Time]");
+		return SendUseageMessage(playerid, "/setatmrobtime [Atm ID] [Time]");
 
 	if(AtmInfo[atmid][Exists] == false)
 		return SCM(playerid, COLOR_GREY, "ATM ID is invalid, please try again");
@@ -913,7 +913,7 @@ CMD:setatmrobtime(playerid, params[])
 #define SendNotDutyAdmin(%0) \
     SendClientMessage(%0, COLOR_GREY, "You are not on Admin Duty to use this command")
 
-#define SDM(%0,%1) \
+#define SendUseageMessage(%0,%1) \
     SendClientMessage(%0, COLOR_GREY, "USEAGE: "%1)
 
 #define SCMf(%0,%1,%2) \
