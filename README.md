@@ -11,4 +11,4 @@
 [atms.sql](https://github.com/NquyenZ/Dynamic-ATM-System/blob/main/atms.sql)
 
 ## Video / Screenshot
-- https://youtu.be/GD0CvfK44hI
+- https://youtu.be/GD0CvfK44hI (Deleted)
